@@ -14,12 +14,15 @@ builds:
       - linux
   - id: windows-build
     main: ./cmd/irestore
+    ldflags: -buildmode=exe
     env:
       - CGO_ENABLED=1
-      - GOARCH=amd64
       - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
     goos:
       - windows
+    goarch:
+      - amd64
 
 checksum:
   name_template: 'checksums.txt'
