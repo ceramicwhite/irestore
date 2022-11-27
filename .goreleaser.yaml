@@ -1,11 +1,25 @@
 project_name: irestore
 builds:
-  - id: darwin-build
-    main: ./cmd/irestore
+  - id: darwin-build-amd64
+    main: ./main.go
     env:
       - CGO_ENABLED=1
+      - CC=o64-clang
+      - CXX=o64-clang++
     goos:
       - darwin
+    goarch:
+      - amd64
+  - id: darwin-build-arm64
+    main: ./main.go
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-apple-darwin21.4-clang
+      - CXX=aarch64-apple-darwin21.4-clang++
+    goos:
+      - darwin
+    goarch:
+      - arm64
   - id: linux-build
     main: ./cmd/irestore
     env:
