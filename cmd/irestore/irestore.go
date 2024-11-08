@@ -331,6 +331,40 @@ func encryptkeys(db *backup.MobileBackup, keys string, outfile string) {
 	must(err)
 }
 
+func decrypt(db *backup.MobileBackup, dest string, decryptedManifest []byte) {
+	var err error
+	var total int64
+
+	err = os.MkdirAll(dest, 0755)
+	must(err)
+
+	err = os.WriteFile(path.Join(dest, "Manifest.db"), decryptedManifest, 0644)
+	must(err)
+
+	for _, rec := range db.Records {
+		if rec.Length > 0 {
+			outPath := path.Join(dest, rec.Domain, rec.Path)
+			dir := path.Dir(outPath)
+			err = os.MkdirAll(dir, 0755)
+			must(err)
+
+			r, err := db.FileReader(rec)
+			if err != nil {
+				log.Println("error reading file", rec, err)
+				continue
+			}
+			must(err)
+			w, err := os.Create(outPath)
+			must(err)
+			n, err := io.Copy(w, r)
+			total += n
+			r.Close()
+			w.Close()
+		}
+	}
+	fmt.Println("Wrote", total, "bytes")
+}
+
 func restore(db *backup.MobileBackup, domain string, dest string, decryptedManifest []byte) {
 	var err error
 	var total int64
@@ -425,6 +459,12 @@ func main() {
 	case "restore":
 		if len(os.Args) > 4 {
 			restore(db, os.Args[3], os.Args[4], decryptedManifest)
+		} else {
+			help()
+		}
+	case "decrypt":
+		if len(os.Args) > 3 {
+			decrypt(db, os.Args[3], decryptedManifest)
 		} else {
 			help()
 		}
