@@ -18,6 +18,7 @@ import (
 	"syscall"
 
 	"crypto/aes"
+	"crypto/cipher"
 
 	"github.com/dnicolson/irestore/backup"
 	"github.com/dnicolson/irestore/crypto/aeswrap"
@@ -329,6 +330,22 @@ func encryptkeys(db *backup.MobileBackup, keys string, outfile string) {
 
 	err = ioutil.WriteFile(path, out, 0644)
 	must(err)
+}
+
+var zeroiv = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+
+func unpad(data []byte) []byte {
+	l := len(data)
+	c := data[l-1]
+	if c > 16 {
+		return nil
+	}
+	for i := 0; i < int(c); i++ {
+		if data[l-i-1] != c {
+			return nil
+		}
+	}
+	return data[:l-int(c)]
 }
 
 func decrypt(db *backup.MobileBackup, dest string, decryptedManifest []byte) {
