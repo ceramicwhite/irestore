@@ -367,7 +367,7 @@ func decrypt(db *backup.MobileBackup, dest string, decryptedManifest []byte) {
 				srcPath = path.Join(db.Dir, hcode[:2], hcode)
 			}
 
-			outPath := path.Join(dest, hcode)
+			outPath := path.Join(dest, hcode[:2], hcode)
 			if rec.Length > 0 {
 				key := db.FileKey(rec)
 				if key == nil {
