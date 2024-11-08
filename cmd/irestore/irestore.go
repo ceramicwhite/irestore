@@ -343,23 +343,45 @@ func decrypt(db *backup.MobileBackup, dest string, decryptedManifest []byte) {
 
 	for _, rec := range db.Records {
 		if rec.Length > 0 {
-			outPath := path.Join(dest, rec.Domain, rec.Path)
-			dir := path.Dir(outPath)
-			err = os.MkdirAll(dir, 0755)
-			must(err)
-
-			r, err := db.FileReader(rec)
-			if err != nil {
-				log.Println("error reading file", rec, err)
-				continue
+			hcode := rec.HashCode()
+			srcPath := path.Join(db.Dir, hcode)
+			// Check new path format if old one doesn't exist
+			if _, err := os.Stat(srcPath); err != nil {
+				srcPath = path.Join(db.Dir, hcode[:2], hcode)
 			}
-			must(err)
-			w, err := os.Create(outPath)
-			must(err)
-			n, err := io.Copy(w, r)
-			total += n
-			r.Close()
-			w.Close()
+
+			outPath := path.Join(dest, hcode)
+			if rec.Length > 0 {
+				key := db.FileKey(rec)
+				if key == nil {
+					log.Println("error getting key for file", rec)
+					continue
+				}
+
+				encrypted, err := ioutil.ReadFile(srcPath)
+				if err != nil {
+					log.Println("error reading file", srcPath, err)
+					continue
+				}
+
+				b, err := aes.NewCipher(key)
+				if err != nil {
+					log.Println("error creating cipher", err)
+					continue
+				}
+
+				decrypted := make([]byte, len(encrypted))
+				bm := cipher.NewCBCDecrypter(b, zeroiv)
+				bm.CryptBlocks(decrypted, encrypted)
+				decrypted = unpad(decrypted)
+
+				err = os.MkdirAll(path.Dir(outPath), 0755)
+				must(err)
+
+				err = ioutil.WriteFile(outPath, decrypted, 0644)
+				must(err)
+				total += int64(len(decrypted))
+			}
 		}
 	}
 	fmt.Println("Wrote", total, "bytes")
