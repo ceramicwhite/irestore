@@ -12,22 +12,24 @@ MyPhone 5069636b6c656448657272696e674170706c6573
 MyPad 43686f636f6c61746552616d656b696e73546f6f
 ```
 
-The first argument is the device id or device name:
+The first argument is the command, followed by any required parameters:
 
 ```shell
-# irestore MyPad
-Selected MyPad 43686f636f6c61746552616d656b696e73546f6f
+# irestore
 Usage:
-    ls [domain]
-    restore domain dest
-    dumpkeys [outputfile]
-    encryptkeys [inputfile] [outputfile]
-    apps
+    ls [backup-path] [domain]
+    restore [backup-path] domain dest
+    [backup-path] decrypt [output-path] [password]
+    dumpkeys [backup-path] [outputfile]
+    encryptkeys [backup-path] [inputfile] [outputfile]
+    apps [backup-path]
 ```
 
 The `ls` command will list domains or files in a domain.
 
 The `restore` command will restore the files in a domain into a directory tree.
+
+The `decrypt` command will decrypt the backup into a directory tree while preserving the original unparsed file structure as if the backup had been made unencrypted.
 
 The `dumpkeys` command will dump the readable portions of the keychain to json.
 
@@ -67,3 +69,4 @@ There are a few changes in iOS 10.2.  The Manifest database itself is encrypted,
 Further, the keybag has a second round of PBKDF2 with different parameters and a sha256 hash function. This one takes about 10 seconds in Go, so the code now prints the decrypted key in hex. If you provide this hex key instead of your password, you can skip the long key derivation step.
 
 (iOS 10.2 details came from a github thread.)
+python iTunes_Backup_Reader.py -i '/Users/jazzy/Desktop/iPhone' -o '/Users/jazzy/Desktop/case' -d -p 'Chibe1993!' -t db 

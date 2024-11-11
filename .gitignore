@@ -1,3 +1,5 @@
 .aider*
 .env
 /output
+.DS_Store
+/_TSV Exports
